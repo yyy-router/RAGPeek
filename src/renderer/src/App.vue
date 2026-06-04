@@ -1,26 +1,37 @@
 <script setup lang="ts">
-import Versions from './components/Versions.vue'
-
-const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+import { NLayout, NLayoutHeader, NLayoutSider, NLayoutContent, NLayoutFooter } from 'naive-ui'
+import ConnectionBar from './components/ConnectionBar.vue'
+import Sidebar from './components/Sidebar.vue'
+import StatusBar from './components/StatusBar.vue'
 </script>
 
 <template>
-  <img alt="logo" class="logo" src="./assets/electron.svg" />
-  <div class="creator">Powered by electron-vite</div>
-  <div class="text">
-    Build an Electron app with
-    <span class="vue">Vue</span>
-    and
-    <span class="ts">TypeScript</span>
-  </div>
-  <p class="tip">Please try pressing <code>F12</code> to open the devTool</p>
-  <div class="actions">
-    <div class="action">
-      <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">Documentation</a>
-    </div>
-    <div class="action">
-      <a target="_blank" rel="noreferrer" @click="ipcHandle">Send IPC</a>
-    </div>
-  </div>
-  <Versions />
+  <NLayout class="app-layout">
+    <NLayoutHeader class="app-header" bordered>
+      <ConnectionBar />
+    </NLayoutHeader>
+    <NLayout class="app-body" has-sider>
+      <NLayoutSider width="240" bordered>
+        <Sidebar />
+      </NLayoutSider>
+      <NLayoutContent class="app-main">
+        <div class="placeholder">
+          <p>Connect to a ChromaDB instance to begin</p>
+        </div>
+      </NLayoutContent>
+    </NLayout>
+    <NLayoutFooter class="app-footer" bordered>
+      <StatusBar />
+    </NLayoutFooter>
+  </NLayout>
 </template>
+
+<style>
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.app-layout { height: 100vh; }
+.app-header { padding: 0 16px; height: 48px; display: flex; align-items: center; }
+.app-body { flex: 1; }
+.app-main { padding: 24px; }
+.app-footer { padding: 0 16px; height: 28px; display: flex; align-items: center; font-size: 12px; }
+.placeholder { color: var(--n-text-color-3); font-size: 14px; display: flex; align-items: center; justify-content: center; height: 100%; }
+</style>

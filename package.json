@@ -22,7 +22,14 @@
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
-    "@electron-toolkit/utils": "^4.0.0"
+    "@electron-toolkit/utils": "^4.0.0",
+    "better-sqlite3": "^12.10.0",
+    "chromadb": "^3.4.3",
+    "echarts": "^6.1.0",
+    "lucide-vue-next": "^0.577.0",
+    "naive-ui": "^2.44.1",
+    "pinia": "^3.0.4",
+    "vue-echarts": "^8.0.1"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "3.0.0",

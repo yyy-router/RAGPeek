@@ -1,22 +1,51 @@
+import http from 'http'
+
 const DEFAULT_TENANT = 'default_tenant'
 const DEFAULT_DATABASE = 'default_database'
 
-async function request<T>(baseUrl: string, path: string, options?: RequestInit): Promise<T> {
-  const url = `${baseUrl.replace(/\/$/, '')}${path}`
-  const res = await fetch(url, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+function request<T>(baseUrl: string, path: string, opts?: { method?: string; body?: string }): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const u = new URL(path, baseUrl.replace(/\/$/, ''))
+    const req = http.request(
+      {
+        hostname: u.hostname,
+        port: u.port || 80,
+        path: u.pathname + u.search,
+        method: opts?.method ?? 'GET',
+        family: 4,
+        headers: { 'Content-Type': 'application/json' },
+      },
+      (res) => {
+        let body = ''
+        res.on('data', (chunk) => (body += chunk))
+        res.on('end', () => {
+          if (!res.statusCode || res.statusCode >= 400) {
+            reject(new Error(`ChromaDB error ${res.statusCode}: ${body.slice(0, 200)}`))
+          } else {
+            try {
+              resolve(JSON.parse(body) as T)
+            } catch {
+              reject(new Error(`Failed to parse response: ${body.slice(0, 200)}`))
+            }
+          }
+        })
+      }
+    )
+    req.on('error', reject)
+    req.setTimeout(5000, () => { req.destroy(); reject(new Error('Request timeout')) })
+    if (opts?.body) req.write(opts.body)
+    req.end()
   })
-  if (!res.ok) {
-    throw new Error(`ChromaDB error ${res.status}: ${await res.text().catch(() => '')}`)
-  }
-  return res.json()
 }
 
 export async function heartbeat(baseUrl: string): Promise<boolean> {
   try {
-    const data = await request<{ heartbeat: number }>(baseUrl, '/api/v2/heartbeat')
-    return typeof data.heartbeat === 'number'
+    const data = await request<{ heartbeat: number } | { 'nanosecond heartbeat': number }>(
+      baseUrl,
+      '/api/v2/heartbeat'
+    )
+    return typeof (data as any).heartbeat === 'number' ||
+           typeof (data as any)['nanosecond heartbeat'] === 'number'
   } catch {
     return false
   }

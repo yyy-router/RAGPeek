@@ -1,7 +1,8 @@
 import { ipcMain } from 'electron'
 import * as chromadb from './chromadb-client'
+import * as database from './database'
 
-export function registerChromadbHandlers(): void {
+export function registerHandlers(): void {
   ipcMain.handle('chromadb:heartbeat', (_e, url: string) => chromadb.heartbeat(url))
 
   ipcMain.handle('chromadb:listCollections', (_e, url: string) =>
@@ -26,4 +27,10 @@ export function registerChromadbHandlers(): void {
       nResults: number
     ) => chromadb.queryCollection(url, tenant, database, collectionId, queryTexts, nResults)
   )
+
+  ipcMain.handle('storage:saveConnection', (_e, id: string, name: string, url: string, createdAt: string) =>
+    database.saveConnection(id, name, url, createdAt)
+  )
+  ipcMain.handle('storage:listConnections', () => database.listConnections())
+  ipcMain.handle('storage:deleteConnection', (_e, id: string) => database.deleteConnection(id))
 }

@@ -26,10 +26,24 @@ interface ChromaDBAPI {
   }>
 }
 
+interface ConnectionRow {
+  id: string
+  name: string
+  url: string
+  created_at: string
+}
+
+interface StorageAPI {
+  saveConnection: (id: string, name: string, url: string, createdAt: string) => Promise<void>
+  listConnections: () => Promise<ConnectionRow[]>
+  deleteConnection: (id: string) => Promise<void>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
     api: unknown
     chromadb: ChromaDBAPI
+    storage: StorageAPI
   }
 }

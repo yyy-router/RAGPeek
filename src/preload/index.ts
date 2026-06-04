@@ -18,11 +18,19 @@ const chromadb = {
   ) => ipcRenderer.invoke('chromadb:queryCollection', url, tenant, database, collectionId, queryTexts, nResults),
 }
 
+const storage = {
+  saveConnection: (id: string, name: string, url: string, createdAt: string) =>
+    ipcRenderer.invoke('storage:saveConnection', id, name, url, createdAt),
+  listConnections: () => ipcRenderer.invoke('storage:listConnections'),
+  deleteConnection: (id: string) => ipcRenderer.invoke('storage:deleteConnection', id),
+}
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chromadb', chromadb)
+    contextBridge.exposeInMainWorld('storage', storage)
   } catch (error) {
     console.error(error)
   }
@@ -33,4 +41,6 @@ if (process.contextIsolated) {
   window.api = api
   // @ts-ignore (define in dts)
   window.chromadb = chromadb
+  // @ts-ignore (define in dts)
+  window.storage = storage
 }

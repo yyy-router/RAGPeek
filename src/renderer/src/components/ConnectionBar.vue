@@ -1,18 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { PlugIcon, UnplugIcon, SunIcon, MoonIcon } from 'lucide-vue-next'
 import { useTheme } from '../composables/useTheme'
+import { useConnectionStore } from '../stores/connection'
 
 const { theme, toggle: toggleTheme } = useTheme()
-const urlInput = ref('http://localhost:8000')
-const connected = ref(false)
+const store = useConnectionStore()
 
-function handleConnect(): void {
-  connected.value = true
+const urlInput = ref('http://localhost:8000')
+
+onMounted(() => store.loadSaved())
+
+const savedOptions = computed(() =>
+  store.savedConnections.map((c) => ({ label: `${c.name} (${c.url})`, value: c.url }))
+)
+
+async function handleConnect(): Promise<void> {
+  await store.connect(urlInput.value)
 }
 
 function handleDisconnect(): void {
-  connected.value = false
+  store.disconnect()
 }
 </script>
 
@@ -23,38 +31,47 @@ function handleDisconnect(): void {
       <span class="brand-name">RAGPeek</span>
     </div>
 
-    <div class="url-group">
-      <span class="proto-tag">HTTP</span>
-      <input
-        v-model="urlInput"
-        class="url-input"
-        placeholder="localhost:8000"
-        spellcheck="false"
-      />
-      <button
-        v-if="!connected"
-        class="btn btn-connect"
-        @click="handleConnect"
+    <template v-if="!store.connected">
+      <select
+        v-if="savedOptions.length"
+        class="saved-select"
+        @change="store.connect(($event.target as HTMLSelectElement).value)"
       >
-        <PlugIcon :size="13" />
-        <span>Connect</span>
-      </button>
-      <button
-        v-else
-        class="btn btn-disconnect"
-        @click="handleDisconnect"
-      >
-        <UnplugIcon :size="13" />
-        <span>Disconnect</span>
-      </button>
-    </div>
+        <option value="" disabled selected>Saved...</option>
+        <option v-for="opt in savedOptions" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </option>
+      </select>
+
+      <div class="url-group">
+        <span class="proto-tag">HTTP</span>
+        <input
+          v-model="urlInput"
+          class="url-input"
+          placeholder="localhost:8000"
+          spellcheck="false"
+        />
+        <button class="btn btn-connect" :disabled="store.connecting" @click="handleConnect">
+          <PlugIcon :size="13" />
+          <span>{{ store.connecting ? 'Connecting...' : 'Connect' }}</span>
+        </button>
+      </div>
+    </template>
+
+    <template v-else>
+      <div class="connected-bar">
+        <span class="status-dot" />
+        <span class="status-text">{{ store.currentUrl }}</span>
+        <button class="btn btn-disconnect" @click="handleDisconnect">
+          <UnplugIcon :size="13" />
+          <span>Disconnect</span>
+        </button>
+      </div>
+    </template>
 
     <div class="spacer" />
 
-    <div v-if="connected" class="status">
-      <span class="status-dot" />
-      <span class="status-text">{{ urlInput }}</span>
-    </div>
+    <p v-if="store.error" class="error-msg">{{ store.error }}</p>
 
     <button class="theme-toggle" @click="toggleTheme" :title="theme === 'dark' ? 'Switch to light' : 'Switch to dark'">
       <SunIcon v-if="theme === 'dark'" :size="15" />
@@ -68,7 +85,7 @@ function handleDisconnect(): void {
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 14px;
+  gap: 10px;
   -webkit-app-region: no-drag;
 }
 
@@ -77,6 +94,19 @@ function handleDisconnect(): void {
 .brand-name {
   font-weight: 600; font-size: 15px;
   color: var(--text-primary); letter-spacing: -0.3px;
+}
+
+.saved-select {
+  background: var(--bg-root);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  outline: none;
+  cursor: pointer;
+  max-width: 180px;
 }
 
 .url-group {
@@ -103,25 +133,37 @@ function handleDisconnect(): void {
   padding: 5px 12px; border: none; font-size: 13px;
   font-weight: 500; cursor: pointer; font-family: var(--font-ui);
 }
-.btn-connect { background: var(--accent); color: #fff; border: none; }
-.btn-connect:hover { filter: brightness(1.1); }
-.btn-disconnect {
-  background: transparent; color: var(--text-secondary);
-  border-left: 1px solid var(--border-default);
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn-connect { background: var(--accent); color: #fff; }
+.btn-connect:hover:not(:disabled) { filter: brightness(1.1); }
+
+.connected-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 2px 10px;
+  background: var(--bg-root);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
 }
-.btn-disconnect:hover { color: var(--danger); }
-
-.spacer { flex: 1; }
-
-.status { display: flex; align-items: center; gap: 6px; }
 .status-dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--success);
   box-shadow: 0 0 6px var(--success);
 }
 .status-text {
-  font-family: var(--font-mono); font-size: 12px;
-  color: var(--text-muted);
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);
+}
+.btn-disconnect {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border: none; border-left: 1px solid var(--border-default);
+  background: transparent; color: var(--text-secondary);
+  font-size: 12px; cursor: pointer; font-family: var(--font-ui);
+}
+.btn-disconnect:hover { color: var(--danger); }
+
+.spacer { flex: 1; }
+.error-msg {
+  font-size: 12px; color: var(--danger);
+  max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .theme-toggle {

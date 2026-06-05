@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { CircleIcon } from 'lucide-vue-next'
+import { useConnectionStore } from '../stores/connection'
+
+const conn = useConnectionStore()
 </script>
 
 <template>
   <div class="statusbar">
     <div class="status-left">
-      <CircleIcon :size="9" class="status-icon" />
-      <span>Disconnected</span>
+      <CircleIcon :size="9" :class="conn.connected ? 'connected' : 'disconnected'" />
+      <span>{{ conn.connected ? `Connected to ${conn.currentUrl}` : 'Disconnected' }}</span>
     </div>
     <div class="status-right">
       <span>RAGPeek v0.1</span>
@@ -29,7 +32,6 @@ import { CircleIcon } from 'lucide-vue-next'
   align-items: center;
   gap: 6px;
 }
-.status-icon {
-  color: var(--text-muted);
-}
+.disconnected { color: var(--text-muted); }
+.connected { color: var(--success); }
 </style>

@@ -21,6 +21,13 @@ function createWindow(): void {
     mainWindow.show()
   })
 
+  mainWindow.webContents.on('before-input-event', (_e, input) => {
+    if ((input.control || input.meta) && (input.key === '-' || input.key === '=' || input.key === '0')) {
+      mainWindow?.webContents.send('zoom-command', input.key)
+      _e.preventDefault()
+    }
+  })
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }

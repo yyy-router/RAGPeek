@@ -16,6 +16,12 @@ export function registerHandlers(): void {
   )
 
   ipcMain.handle(
+    'chromadb:getDocuments',
+    (_e, url: string, tenant: string, database: string, collectionId: string, limit: number, offset: number) =>
+      chromadb.getCollectionDocuments(url, tenant, database, collectionId, limit, offset)
+  )
+
+  ipcMain.handle(
     'chromadb:queryCollection',
     (
       _e,

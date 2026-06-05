@@ -8,6 +8,14 @@ const chromadb = {
   listCollections: (url: string) => ipcRenderer.invoke('chromadb:listCollections', url),
   getCollectionCount: (url: string, tenant: string, database: string, collectionId: string) =>
     ipcRenderer.invoke('chromadb:getCollectionCount', url, tenant, database, collectionId),
+  getDocuments: (
+    url: string,
+    tenant: string,
+    database: string,
+    collectionId: string,
+    limit: number,
+    offset: number
+  ) => ipcRenderer.invoke('chromadb:getDocuments', url, tenant, database, collectionId, limit, offset),
   queryCollection: (
     url: string,
     tenant: string,

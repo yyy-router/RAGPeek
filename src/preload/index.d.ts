@@ -11,6 +11,18 @@ interface ChromaDBAPI {
     database: string,
     collectionId: string
   ) => Promise<number>
+  getDocuments: (
+    url: string,
+    tenant: string,
+    database: string,
+    collectionId: string,
+    limit: number,
+    offset: number
+  ) => Promise<{
+    ids: string[]
+    documents: string[]
+    metadatas: Record<string, unknown>[]
+  }>
   queryCollection: (
     url: string,
     tenant: string,

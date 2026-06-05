@@ -65,11 +65,25 @@ export async function getCollectionCount(
   database: string,
   collectionId: string
 ): Promise<number> {
-  const data = await request<{ count: number }>(
+  const data = await request<number>(
     baseUrl,
     `/api/v2/tenants/${tenant}/databases/${database}/collections/${collectionId}/count`
   )
-  return data.count
+  return data
+}
+
+export async function getCollectionDocuments(
+  baseUrl: string,
+  tenant: string,
+  database: string,
+  collectionId: string,
+  limit: number = 50,
+  offset: number = 0
+): Promise<{ ids: string[]; documents: string[]; metadatas: Record<string, unknown>[] }> {
+  return request(baseUrl, `/api/v2/tenants/${tenant}/databases/${database}/collections/${collectionId}/get`, {
+    method: 'POST',
+    body: JSON.stringify({ limit, offset, include: ['documents', 'metadatas'] }),
+  })
 }
 
 export async function queryCollection(

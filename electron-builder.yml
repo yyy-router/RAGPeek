@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: ragpeek
+appId: com.ragpeek.app
+productName: RAGPeek
 directories:
   buildResources: build
 files:

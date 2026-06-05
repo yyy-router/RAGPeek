@@ -7,7 +7,6 @@ out
 .claude/
 .idea/
 docs/
-build/
 .env
 .env.local
 .env.*.local

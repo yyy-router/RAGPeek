@@ -5,12 +5,14 @@ import { registerHandlers } from './ipc-handlers'
 import { initDatabase } from './database'
 
 function createWindow(): void {
+  const icon = join(__dirname, '../../build/icon.png')
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    ...(process.platform !== 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

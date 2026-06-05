@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NMessageProvider } from 'naive-ui'
 import ConnectionBar from './components/ConnectionBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import StatusBar from './components/StatusBar.vue'
@@ -14,7 +15,8 @@ const { collapsed, toggle } = useSidebar()
 </script>
 
 <template>
-  <div class="app-shell">
+  <NMessageProvider>
+    <div class="app-shell">
     <header class="app-header">
       <ConnectionBar />
     </header>
@@ -43,7 +45,8 @@ const { collapsed, toggle } = useSidebar()
     <footer class="app-footer">
       <StatusBar />
     </footer>
-  </div>
+    </div>
+  </NMessageProvider>
 </template>
 
 <style scoped>

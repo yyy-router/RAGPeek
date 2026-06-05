@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { NText, NSpin } from 'naive-ui'
+import { NText, NSpin, useMessage } from 'naive-ui'
 import {
   FileTextIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon,
   Trash2Icon, EyeIcon, SquareIcon, CheckSquareIcon, MinusSquareIcon,
@@ -11,6 +11,7 @@ import { useCollectionsStore } from '../stores/collections'
 
 const conn = useConnectionStore()
 const store = useCollectionsStore()
+const message = useMessage()
 const selectedIds = ref<Set<string>>(new Set())
 const activeTab = ref<'schema' | 'documents'>('schema')
 
@@ -34,6 +35,7 @@ async function handleCopyJson(): Promise<void> {
     id: d.id, document: d.document, metadata: d.metadata,
   }))
   await navigator.clipboard.writeText(JSON.stringify(docs, null, 2))
+  message.success(`Copied ${docs.length} document(s) to clipboard`)
 }
 const deleting = ref(false)
 

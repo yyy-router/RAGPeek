@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const STORAGE_KEY = 'ragpeek-zoom'
 const MIN = 60

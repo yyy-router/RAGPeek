@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { CircleIcon } from 'lucide-vue-next'
 import { useConnectionStore } from '../stores/connection'
+import { useZoom } from '../composables/useZoom'
 
 const conn = useConnectionStore()
+const { zoom } = useZoom()
 </script>
 
 <template>
@@ -12,6 +14,8 @@ const conn = useConnectionStore()
       <span>{{ conn.connected ? `Connected to ${conn.currentUrl}` : 'Disconnected' }}</span>
     </div>
     <div class="status-right">
+      <span>Zoom {{ zoom }}%</span>
+      <span class="sep">|</span>
       <span>RAGPeek v0.1</span>
     </div>
   </div>
@@ -34,4 +38,5 @@ const conn = useConnectionStore()
 }
 .disconnected { color: var(--text-muted); }
 .connected { color: var(--success); }
+.sep { opacity: .3; margin: 0 2px; }
 </style>

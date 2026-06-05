@@ -4,8 +4,13 @@ import Sidebar from './components/Sidebar.vue'
 import StatusBar from './components/StatusBar.vue'
 import CollectionPreview from './components/CollectionPreview.vue'
 import { useConnectionStore } from './stores/connection'
+import { useZoom } from './composables/useZoom'
+import { useSidebar } from './composables/useSidebar'
+import { PanelLeftCloseIcon, PanelLeftIcon } from 'lucide-vue-next'
 
 const conn = useConnectionStore()
+useZoom()
+const { collapsed, toggle } = useSidebar()
 </script>
 
 <template>
@@ -14,8 +19,14 @@ const conn = useConnectionStore()
       <ConnectionBar />
     </header>
     <div class="app-body">
-      <aside class="app-sidebar">
-        <Sidebar />
+      <aside class="app-sidebar" :class="{ collapsed }">
+        <div v-show="!collapsed" class="sidebar-inner">
+          <Sidebar />
+        </div>
+        <button class="sidebar-toggle" @click="toggle" :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+          <PanelLeftIcon v-if="collapsed" :size="16" />
+          <PanelLeftCloseIcon v-else :size="16" />
+        </button>
       </aside>
       <main class="app-main">
         <CollectionPreview v-if="conn.connected" />
@@ -62,8 +73,35 @@ const conn = useConnectionStore()
   min-width: 260px;
   background: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  transition: width .15s, min-width .15s;
+  position: relative;
+}
+.app-sidebar.collapsed {
+  width: 36px;
+  min-width: 36px;
+}
+.sidebar-inner {
+  flex: 1;
   overflow-y: auto;
 }
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 32px;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.sidebar-toggle:hover { background: var(--bg-hover); color: var(--text-primary); }
+.app-sidebar.collapsed .sidebar-toggle { border-top: none; }
+
 .app-main {
   flex: 1;
   overflow: auto;
@@ -78,7 +116,7 @@ const conn = useConnectionStore()
   background: var(--bg-surface);
   border-top: 1px solid var(--border-subtle);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 .empty-state {
@@ -89,12 +127,6 @@ const conn = useConnectionStore()
   height: 100%;
   gap: 12px;
 }
-.empty-icon {
-  color: var(--text-muted);
-  opacity: 0.4;
-}
-.empty-text {
-  color: var(--text-muted);
-  font-size: 14px;
-}
+.empty-icon { color: var(--text-muted); opacity: 0.4; }
+.empty-text { color: var(--text-muted); font-size: 14px; }
 </style>

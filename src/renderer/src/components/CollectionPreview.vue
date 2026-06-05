@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { NText, NSpin } from 'naive-ui'
 import { FileTextIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
 import { useConnectionStore } from '../stores/connection'
@@ -48,8 +48,11 @@ function getFullText(doc: { id: string; document: string; metadata: Record<strin
   return String(val)
 }
 
+const selectedDocId = ref<string | null>(null)
+
 function goPage(p: number): void {
   if (p >= 1 && p <= store.totalPages) store.loadPage(conn.currentUrl, undefined, p)
+  selectedDocId.value = null
 }
 </script>
 
@@ -76,7 +79,9 @@ function goPage(p: number): void {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="doc in store.docs" :key="doc.id">
+            <tr v-for="doc in store.docs" :key="doc.id"
+                :class="{ selected: selectedDocId === doc.id }"
+                @click="selectedDocId = selectedDocId === doc.id ? null : doc.id">
               <td v-for="col in columns" :key="col.key" :title="getFullText(doc, col.key)">
                 <code v-if="col.key === 'id'" class="cell-id">{{ doc.id }}</code>
                 <span v-else class="cell-text">{{ getFullText(doc, col.key) }}</span>
@@ -126,23 +131,28 @@ function goPage(p: number): void {
 .table-sub { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
 
 .table-wrapper { flex: 1; overflow: auto; }
-.data-table { width: 100%; border-collapse: collapse; }
+.data-table { border-collapse: collapse; }
 
 thead { position: sticky; top: 0; z-index: 1; }
 th {
   background: var(--bg-surface);
-  padding: 8px 14px; text-align: left; font-size: 12px;
+  padding: 6px 12px; text-align: left; font-size: 12px;
   border-bottom: 2px solid var(--border-default); white-space: nowrap;
+  max-width: 220px;
 }
+th:first-child { max-width: 140px; }
 .th-label { color: var(--text-primary); font-weight: 600; }
 .th-type { color: var(--text-muted); font-weight: 400; font-size: 10px; margin-left: 6px; text-transform: uppercase; }
 
 td {
-  padding: 8px 14px; border-bottom: 1px solid var(--border-subtle);
+  padding: 6px 12px; border-bottom: 1px solid var(--border-subtle);
   vertical-align: top; font-size: 13px; color: var(--text-primary);
-  max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+td:first-child { max-width: 140px; }
+
 tr:hover td { background: var(--bg-hover); }
+tr.selected td { background: var(--bg-raised); border-left: 2px solid var(--accent); }
 
 .cell-id { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
 .cell-text { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }

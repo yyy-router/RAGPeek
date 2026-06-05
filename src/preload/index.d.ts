@@ -23,6 +23,8 @@ interface ChromaDBAPI {
     documents: string[]
     metadatas: Record<string, unknown>[]
   }>
+  deleteDocuments: (url: string, tenant: string, database: string, collectionId: string, ids: string[]) => Promise<void>
+  deleteCollection: (url: string, tenant: string, database: string, collectionId: string) => Promise<void>
   queryCollection: (
     url: string,
     tenant: string,

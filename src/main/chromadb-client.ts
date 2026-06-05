@@ -86,6 +86,45 @@ export async function getCollectionDocuments(
   })
 }
 
+export async function deleteDocuments(
+  baseUrl: string,
+  tenant: string,
+  database: string,
+  collectionId: string,
+  ids: string[]
+): Promise<void> {
+  await request(baseUrl, `/api/v2/tenants/${tenant}/databases/${database}/collections/${collectionId}/delete`, {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  })
+}
+
+export async function updateDocument(
+  baseUrl: string,
+  tenant: string,
+  database: string,
+  collectionId: string,
+  id: string,
+  document: string,
+  metadata: Record<string, unknown>
+): Promise<void> {
+  await request(baseUrl, `/api/v2/tenants/${tenant}/databases/${database}/collections/${collectionId}/update`, {
+    method: 'POST',
+    body: JSON.stringify({ ids: [id], documents: [document], metadatas: [metadata] }),
+  })
+}
+
+export async function deleteCollection(
+  baseUrl: string,
+  tenant: string,
+  database: string,
+  collectionName: string
+): Promise<void> {
+  await request(baseUrl, `/api/v2/tenants/${tenant}/databases/${database}/collections/${collectionName}`, {
+    method: 'DELETE',
+  })
+}
+
 export async function queryCollection(
   baseUrl: string,
   tenant: string,

@@ -34,6 +34,18 @@ export function registerHandlers(): void {
     ) => chromadb.queryCollection(url, tenant, database, collectionId, queryTexts, nResults)
   )
 
+  ipcMain.handle(
+    'chromadb:deleteDocuments',
+    (_e, url: string, tenant: string, database: string, collectionId: string, ids: string[]) =>
+      chromadb.deleteDocuments(url, tenant, database, collectionId, ids)
+  )
+
+  ipcMain.handle(
+    'chromadb:deleteCollection',
+    (_e, url: string, tenant: string, database: string, collectionId: string) =>
+      chromadb.deleteCollection(url, tenant, database, collectionId)
+  )
+
   ipcMain.handle('storage:saveConnection', (_e, id: string, name: string, url: string, createdAt: string) =>
     database.saveConnection(id, name, url, createdAt)
   )

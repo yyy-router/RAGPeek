@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { NText, NSpin } from 'naive-ui'
-import { DatabaseIcon } from 'lucide-vue-next'
+import { DatabaseIcon, Trash2Icon } from 'lucide-vue-next'
 import { useConnectionStore } from '../stores/connection'
 import { useCollectionsStore } from '../stores/collections'
 
 const connStore = useConnectionStore()
 const colStore = useCollectionsStore()
+
+async function handleDelete(colName: string): Promise<void> {
+  if (confirm(`Delete collection "${colName}"? This cannot be undone.`)) {
+    await colStore.deleteCollection(connStore.currentUrl, colName)
+  }
+}
 
 watch(() => connStore.connected, (val) => {
   if (val) {
@@ -41,6 +47,9 @@ watch(() => connStore.connected, (val) => {
             <span class="col-name">{{ col.name }}</span>
           </div>
           <span class="col-count">{{ colStore.counts[col.id] ?? '-' }}</span>
+          <button class="col-delete" title="Delete collection" @click.stop="handleDelete(col.name)">
+            <Trash2Icon :size="12" />
+          </button>
         </div>
       </div>
     </div>
@@ -82,6 +91,15 @@ watch(() => connStore.connected, (val) => {
   color: var(--text-primary); overflow: hidden; text-overflow: ellipsis;
   white-space: nowrap;
 }
+.col-delete {
+  display: none; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border: none; background: transparent;
+  cursor: pointer; color: var(--text-muted); border-radius: 3px;
+  flex-shrink: 0;
+}
+.collection-item:hover .col-delete { display: flex; }
+.col-delete:hover { background: var(--bg-hover); color: var(--danger); }
+
 .col-count {
   font-family: var(--font-mono); font-size: 11px;
   color: var(--text-muted); flex-shrink: 0;

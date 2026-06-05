@@ -24,6 +24,10 @@ const chromadb = {
     queryTexts: string[],
     nResults: number
   ) => ipcRenderer.invoke('chromadb:queryCollection', url, tenant, database, collectionId, queryTexts, nResults),
+  deleteDocuments: (url: string, tenant: string, database: string, collectionId: string, ids: string[]) =>
+    ipcRenderer.invoke('chromadb:deleteDocuments', url, tenant, database, collectionId, ids),
+  deleteCollection: (url: string, tenant: string, database: string, collectionId: string) =>
+    ipcRenderer.invoke('chromadb:deleteCollection', url, tenant, database, collectionId),
 }
 
 const storage = {

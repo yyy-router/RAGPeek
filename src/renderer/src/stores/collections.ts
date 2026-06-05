@@ -80,6 +80,16 @@ export const useCollectionsStore = defineStore('collections', () => {
     }
   }
 
+  async function deleteCollection(url: string, name: string): Promise<void> {
+    await window.chromadb.deleteCollection(url, 'default_tenant', 'default_database', name)
+    if (selectedId.value && collections.value.find((c) => c.name === name)?.id === selectedId.value) {
+      selectedId.value = null
+      docs.value = []
+    }
+    // Re-fetch from server for reliable state
+    await fetchCollections(url)
+  }
+
   function clear(): void {
     collections.value = []
     counts.value = {}
@@ -91,6 +101,6 @@ export const useCollectionsStore = defineStore('collections', () => {
   return {
     collections, counts, loading,
     selectedId, selected, docs, docsLoading, page, totalPages,
-    fetchCollections, selectCollection, loadPage, clear,
+    fetchCollections, selectCollection, loadPage, deleteCollection, clear,
   }
 })

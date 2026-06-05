@@ -33,6 +33,8 @@ watch(() => connStore.connected, (val) => {
           v-for="col in colStore.collections"
           :key="col.id"
           class="collection-item"
+          :class="{ selected: colStore.selectedId === col.id }"
+          @click="colStore.selectCollection(connStore.currentUrl, col.id)"
         >
           <div class="col-left">
             <DatabaseIcon :size="13" class="col-icon" />
@@ -72,6 +74,7 @@ watch(() => connStore.connected, (val) => {
   transition: background .1s;
 }
 .collection-item:hover { background: var(--bg-hover); }
+.collection-item.selected { background: var(--bg-raised); border-left: 2px solid var(--accent); padding-left: 6px; }
 .col-left { display: flex; align-items: center; gap: 6px; }
 .col-icon { color: var(--text-muted); flex-shrink: 0; }
 .col-name {

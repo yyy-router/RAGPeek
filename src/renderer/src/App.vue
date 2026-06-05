@@ -2,6 +2,10 @@
 import ConnectionBar from './components/ConnectionBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import StatusBar from './components/StatusBar.vue'
+import CollectionPreview from './components/CollectionPreview.vue'
+import { useConnectionStore } from './stores/connection'
+
+const conn = useConnectionStore()
 </script>
 
 <template>
@@ -14,7 +18,8 @@ import StatusBar from './components/StatusBar.vue'
         <Sidebar />
       </aside>
       <main class="app-main">
-        <div class="empty-state">
+        <CollectionPreview v-if="conn.connected" />
+        <div v-else class="empty-state">
           <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
             <ellipse cx="12" cy="5" rx="9" ry="3"/>
             <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>

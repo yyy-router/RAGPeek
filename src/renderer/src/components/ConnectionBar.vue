@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { PlugIcon, UnplugIcon, SunIcon, MoonIcon } from 'lucide-vue-next'
+import { PlugIcon, UnplugIcon, SunIcon, MoonIcon, Settings2Icon } from 'lucide-vue-next'
 import { useTheme } from '../composables/useTheme'
 import { useConnectionStore } from '../stores/connection'
+import EmbeddingSettings from './EmbeddingSettings.vue'
 
 const { theme, toggle: toggleTheme } = useTheme()
 const store = useConnectionStore()
+const showSettings = ref(false)
 
 const urlInput = ref('http://localhost:8000')
 
@@ -77,6 +79,10 @@ function handleDisconnect(): void {
       <SunIcon v-if="theme === 'dark'" :size="15" />
       <MoonIcon v-else :size="15" />
     </button>
+    <button class="theme-toggle" title="Embedding settings" @click="showSettings = true">
+      <Settings2Icon :size="15" />
+    </button>
+    <EmbeddingSettings v-if="showSettings" @close="showSettings = false" />
   </div>
 </template>
 

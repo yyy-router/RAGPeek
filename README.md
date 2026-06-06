@@ -1,34 +1,29 @@
-# ragpeek
+# RAGPeek
 
-An Electron application with Vue and TypeScript
+Desktop debugging tool for RAG retrieval quality — inspect, query, and optimize your vector database.
 
-## Recommended IDE Setup
+## Features
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- **Connect** to ChromaDB instances (local or remote)
+- **Browse** collections with dynamic schema inspection and paginated document tables
+- **Query Playground** — semantic search with configurable embedding providers (OpenAI, Zhipu, Ollama, etc.)
+- **Edit** documents — multi-select, view detail drawer, copy JSON, batch delete
+- **Manage** collections — delete collections directly from the sidebar
+- **Dark/Light** themes, collapsible sidebar, Ctrl+/- zoom
 
-## Project Setup
-
-### Install
-
-```bash
-$ npm install
-```
-
-### Development
+## Development
 
 ```bash
-$ npm run dev
+git clone https://github.com/yyy-router/RAGPeek.git
+cd RAGPeek
+npm install
+npm run dev
 ```
 
-### Build
+## Tech Stack
 
-```bash
-# For windows
-$ npm run build:win
+Electron · Vue 3 · TypeScript · Naive UI · Pinia · ECharts · SQLite · ChromaDB
 
-# For macOS
-$ npm run build:mac
+## License
 
-# For Linux
-$ npm run build:linux
-```
+MIT

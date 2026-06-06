@@ -16,6 +16,10 @@ const chromadb = {
     limit: number,
     offset: number
   ) => ipcRenderer.invoke('chromadb:getDocuments', url, tenant, database, collectionId, limit, offset),
+  queryByEmbedding: (
+    url: string, tenant: string, database: string, collectionId: string,
+    embedding: number[], nResults: number
+  ) => ipcRenderer.invoke('chromadb:queryByEmbedding', url, tenant, database, collectionId, embedding, nResults),
   queryCollection: (
     url: string,
     tenant: string,
@@ -28,6 +32,18 @@ const chromadb = {
     ipcRenderer.invoke('chromadb:deleteDocuments', url, tenant, database, collectionId, ids),
   deleteCollection: (url: string, tenant: string, database: string, collectionId: string) =>
     ipcRenderer.invoke('chromadb:deleteCollection', url, tenant, database, collectionId),
+}
+
+const settings = {
+  get: (key: string) => ipcRenderer.invoke('settings:get', key),
+  set: (key: string, value: string) => ipcRenderer.invoke('settings:set', key, value),
+  getSecure: (key: string) => ipcRenderer.invoke('settings:getSecure', key),
+  setSecure: (key: string, value: string) => ipcRenderer.invoke('settings:setSecure', key, value),
+}
+
+const embedding = {
+  create: (endpoint: string, apiKey: string, model: string, dimensions: number | undefined, text: string) =>
+    ipcRenderer.invoke('embedding:create', endpoint, apiKey, model, dimensions, text),
 }
 
 const storage = {
@@ -43,6 +59,8 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chromadb', chromadb)
     contextBridge.exposeInMainWorld('storage', storage)
+    contextBridge.exposeInMainWorld('settings', settings)
+    contextBridge.exposeInMainWorld('embedding', embedding)
   } catch (error) {
     console.error(error)
   }

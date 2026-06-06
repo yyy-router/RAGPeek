@@ -4,14 +4,17 @@ import ConnectionBar from './components/ConnectionBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import StatusBar from './components/StatusBar.vue'
 import CollectionPreview from './components/CollectionPreview.vue'
+import QueryPlayground from './components/QueryPlayground.vue'
 import { useConnectionStore } from './stores/connection'
 import { useZoom } from './composables/useZoom'
 import { useSidebar } from './composables/useSidebar'
 import { PanelLeftCloseIcon, PanelLeftIcon } from 'lucide-vue-next'
+import { ref } from 'vue'
 
 const conn = useConnectionStore()
 useZoom()
 const { collapsed, toggle } = useSidebar()
+const mode = ref<'browse' | 'playground'>('browse')
 </script>
 
 <template>
@@ -31,7 +34,14 @@ const { collapsed, toggle } = useSidebar()
         </button>
       </aside>
       <main class="app-main">
-        <CollectionPreview v-if="conn.connected" />
+        <template v-if="conn.connected">
+          <div class="mode-bar">
+            <button class="mode-btn" :class="{ active: mode === 'browse' }" @click="mode = 'browse'">Browse</button>
+            <button class="mode-btn" :class="{ active: mode === 'playground' }" @click="mode = 'playground'">Playground</button>
+          </div>
+          <CollectionPreview v-if="mode === 'browse'" />
+          <QueryPlayground v-else />
+        </template>
         <div v-else class="empty-state">
           <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
             <ellipse cx="12" cy="5" rx="9" ry="3"/>
@@ -107,9 +117,20 @@ const { collapsed, toggle } = useSidebar()
 
 .app-main {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   background: var(--bg-root);
+  display: flex; flex-direction: column;
 }
+.app-main > *:nth-child(n+3) { flex: 1; min-height: 0; }
+
+.mode-bar { display: flex; border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface); padding: 0 12px; flex-shrink: 0; }
+.mode-btn {
+  padding: 7px 14px; border: none; background: none; cursor: pointer;
+  font-size: 12px; color: var(--text-muted); font-family: var(--font-ui);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: .15s;
+}
+.mode-btn:hover { color: var(--text-primary); }
+.mode-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 .app-footer {
   height: 26px;
   min-height: 26px;

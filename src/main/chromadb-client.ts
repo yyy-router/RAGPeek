@@ -142,3 +142,21 @@ export async function queryCollection(
     }),
   })
 }
+
+export async function queryByEmbedding(
+  baseUrl: string,
+  tenant: string,
+  database: string,
+  collectionId: string,
+  embedding: number[],
+  nResults: number
+): Promise<{ ids: string[][]; documents: string[][]; metadatas: Record<string, unknown>[][]; distances: number[][] }> {
+  return request(baseUrl, `/api/v2/tenants/${tenant}/databases/${database}/collections/${collectionId}/query`, {
+    method: 'POST',
+    body: JSON.stringify({
+      query_embeddings: [embedding],
+      n_results: nResults,
+      include: ['documents', 'metadatas', 'distances'],
+    }),
+  })
+}

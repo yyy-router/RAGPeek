@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import * as chromadb from './chromadb-client'
 import * as database from './database'
+import { createEmbedding } from './embedding-client'
 
 export function registerHandlers(): void {
   ipcMain.handle('chromadb:heartbeat', (_e, url: string) => chromadb.heartbeat(url))
@@ -19,6 +20,12 @@ export function registerHandlers(): void {
     'chromadb:getDocuments',
     (_e, url: string, tenant: string, database: string, collectionId: string, limit: number, offset: number) =>
       chromadb.getCollectionDocuments(url, tenant, database, collectionId, limit, offset)
+  )
+
+  ipcMain.handle(
+    'chromadb:queryByEmbedding',
+    (_e, url: string, tenant: string, database: string, collectionId: string, embedding: number[], nResults: number) =>
+      chromadb.queryByEmbedding(url, tenant, database, collectionId, embedding, nResults)
   )
 
   ipcMain.handle(
@@ -51,4 +58,15 @@ export function registerHandlers(): void {
   )
   ipcMain.handle('storage:listConnections', () => database.listConnections())
   ipcMain.handle('storage:deleteConnection', (_e, id: string) => database.deleteConnection(id))
+
+  ipcMain.handle('settings:get', (_e, key: string) => database.getSetting(key))
+  ipcMain.handle('settings:set', (_e, key: string, value: string) => database.setSetting(key, value))
+  ipcMain.handle('settings:getSecure', (_e, key: string) => database.getSecureSetting(key))
+  ipcMain.handle('settings:setSecure', (_e, key: string, value: string) => database.setSecureSetting(key, value))
+
+  ipcMain.handle(
+    'embedding:create',
+    (_e, endpoint: string, apiKey: string, model: string, dimensions: number | undefined, text: string) =>
+      createEmbedding({ endpoint, apiKey, model, dimensions }, text)
+  )
 }

@@ -11,7 +11,7 @@ interface Provider {
   endpoint: string
   apiKey: string
   model: string
-  dimensions: number | null
+  dimensions: string
 }
 
 const providers = ref<Provider[]>([])
@@ -34,7 +34,7 @@ onMounted(async () => {
 const selected = computed(() => providers.value.find((p) => p.id === selectedId.value))
 
 function add(): void {
-  const p: Provider = { id: crypto.randomUUID(), name: 'New Provider', endpoint: '', apiKey: '', model: '', dimensions: null }
+  const p: Provider = { id: crypto.randomUUID(), name: 'New Provider', endpoint: '', apiKey: '', model: '', dimensions: '' }
   providers.value.push(p)
   selectedId.value = p.id
 }

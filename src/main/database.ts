@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3'
-import { app } from 'electron'
+import { app, safeStorage } from 'electron'
 import { join } from 'path'
 
 let db: Database.Database
@@ -51,4 +51,44 @@ export function listConnections(): ConnectionRow[] {
 
 export function deleteConnection(id: string): void {
   db.prepare('DELETE FROM connections WHERE id = ?').run(id)
+}
+
+// --- Settings ---
+
+function ensureSettingsTable(): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL DEFAULT ''
+    )
+  `)
+}
+
+export function getSetting(key: string): string | null {
+  ensureSettingsTable()
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined
+  return row?.value ?? null
+}
+
+export function setSetting(key: string, value: string): void {
+  ensureSettingsTable()
+  db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, value)
+}
+
+export function getSecureSetting(key: string): string | null {
+  const val = getSetting(key)
+  if (!val) return null
+  try {
+    return safeStorage.decryptString(Buffer.from(val, 'base64'))
+  } catch {
+    return null
+  }
+}
+
+export function setSecureSetting(key: string, value: string): void {
+  if (!safeStorage.isEncryptionAvailable()) {
+    throw new Error('Encryption is not available on this system')
+  }
+  const encrypted = safeStorage.encryptString(value).toString('base64')
+  setSetting(key, encrypted)
 }

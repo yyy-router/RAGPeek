@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NMessageProvider } from 'naive-ui'
+import { NMessageProvider, NConfigProvider, darkTheme } from 'naive-ui'
 import ConnectionBar from './components/ConnectionBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import StatusBar from './components/StatusBar.vue'
@@ -7,15 +7,18 @@ import CollectionPreview from './components/CollectionPreview.vue'
 import QueryPlayground from './components/QueryPlayground.vue'
 import CompareView from './components/CompareView.vue'
 import { useConnectionStore } from './stores/connection'
+import { useTheme } from './composables/useTheme'
 import { useZoom } from './composables/useZoom'
 import { useSidebar } from './composables/useSidebar'
 import { PanelLeftCloseIcon, PanelLeftIcon } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const conn = useConnectionStore()
+const { theme } = useTheme()
 useZoom()
 const { collapsed, toggle } = useSidebar()
 const mode = ref<'browse' | 'playground' | 'compare'>('browse')
+const nTheme = computed(() => theme.value === 'dark' ? darkTheme : null)
 
 function handleNav(m: 'browse' | 'compare' | 'playground'): void {
   mode.value = m
@@ -23,7 +26,8 @@ function handleNav(m: 'browse' | 'compare' | 'playground'): void {
 </script>
 
 <template>
-  <NMessageProvider>
+  <NConfigProvider :theme="nTheme">
+    <NMessageProvider>
     <div class="app-shell">
     <header class="app-header">
       <ConnectionBar />
@@ -58,7 +62,8 @@ function handleNav(m: 'browse' | 'compare' | 'playground'): void {
       <StatusBar />
     </footer>
     </div>
-  </NMessageProvider>
+    </NMessageProvider>
+  </NConfigProvider>
 </template>
 
 <style scoped>

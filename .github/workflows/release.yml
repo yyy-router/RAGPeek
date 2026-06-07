@@ -17,6 +17,8 @@ jobs:
           - os: ubuntu-latest
             platform: linux
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
@@ -35,7 +37,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then
-            xvfb-run --auto-servernum npx electron out/main/index.js &
+            xvfb-run --auto-servernum npx electron out/main/index.js --no-sandbox &
             PID=$!
             sleep 8
           elif [ "$RUNNER_OS" = "macOS" ]; then

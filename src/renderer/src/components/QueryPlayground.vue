@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { NSelect, NButton, NSpin, NText } from 'naive-ui'
 import { SearchIcon, ZapIcon } from 'lucide-vue-next'
 import { useConnectionStore } from '../stores/connection'
 import { useCollectionsStore } from '../stores/collections'
+
+const props = defineProps<{
+  compareA?: string | null
+  compareB?: string | null
+  compareQuery?: string
+}>()
 
 const conn = useConnectionStore()
 const colStore = useCollectionsStore()
@@ -13,6 +19,14 @@ const k = ref(5)
 const running = ref(false)
 const providerId = ref<string | null>(null)
 const providers = ref<{ id: string; name: string }[]>([])
+
+watch(() => props.compareQuery, (q) => {
+  if (q && props.compareA && props.compareB) {
+    queryText.value = q
+    comparing.value = true
+    runQuery()
+  }
+})
 
 onMounted(async () => {
   const raw = await window.settings.get('embedding_providers')
@@ -31,7 +45,10 @@ interface ResultDoc {
 }
 
 const results = ref<ResultDoc[]>([])
+const resultsB = ref<ResultDoc[]>([])
 const elapsed = ref(0)
+const elapsedB = ref(0)
+const comparing = ref(false)
 
 const kOptions = [3, 5, 10, 20, 50].map((v) => ({ label: `Top ${v}`, value: v }))
 
@@ -73,6 +90,20 @@ async function runQuery(): Promise<void> {
       distance: res.distances[0]?.[i] ?? null,
     }))
     elapsed.value = Math.round(performance.now() - t0)
+
+    if (comparing.value && props.compareB) {
+      const t1 = performance.now()
+      const resB = await window.chromadb.queryByEmbedding(
+        conn.currentUrl, 'default_tenant', 'default_database', props.compareB, embedding, k.value
+      )
+      resultsB.value = (resB.ids[0] ?? []).map((id, i) => ({
+        id,
+        document: resB.documents[0]?.[i] ?? '',
+        metadata: resB.metadatas[0]?.[i] ?? {},
+        distance: resB.distances[0]?.[i] ?? null,
+      }))
+      elapsedB.value = Math.round(performance.now() - t1)
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Query failed'
   } finally {
@@ -105,9 +136,36 @@ async function runQuery(): Promise<void> {
 
     <div v-if="running" class="pg-status"><NSpin :size="16" /> Searching...</div>
     <div v-else-if="error" class="pg-status error">{{ error }}</div>
-    <div v-else-if="results.length" class="pg-status">{{ results.length }} results in {{ elapsed }}ms</div>
+    <div v-else-if="results.length && !comparing" class="pg-status">{{ results.length }} results in {{ elapsed }}ms</div>
 
-    <div v-if="results.length" class="pg-results">
+    <!-- Compare mode -->
+    <div v-if="comparing && (results.length || resultsB.length)" class="cmp-results">
+      <div class="cmp-col">
+        <div class="cmp-col-hd">{{ colStore.collections.find(c => c.id === props.compareA)?.name || 'A' }} <span class="pg-time">{{ results.length }} · {{ elapsed }}ms</span></div>
+        <div v-for="(r, i) in results" :key="r.id" class="cmp-card">
+          <div class="pg-card-head">
+            <span class="pg-rank">#{{ i + 1 }}</span>
+            <code class="pg-id">{{ r.id }}</code>
+            <span class="pg-score" :class="{ best: i === 0 }">{{ r.distance?.toFixed(4) ?? '—' }}</span>
+          </div>
+          <p class="pg-doc">{{ r.document.slice(0, 200) }}{{ r.document.length > 200 ? '...' : '' }}</p>
+        </div>
+      </div>
+      <div class="cmp-col">
+        <div class="cmp-col-hd">{{ colStore.collections.find(c => c.id === props.compareB)?.name || 'B' }} <span class="pg-time">{{ resultsB.length }} · {{ elapsedB }}ms</span></div>
+        <div v-for="(r, i) in resultsB" :key="r.id" class="cmp-card">
+          <div class="pg-card-head">
+            <span class="pg-rank">#{{ i + 1 }}</span>
+            <code class="pg-id">{{ r.id }}</code>
+            <span class="pg-score" :class="{ best: i === 0 }">{{ r.distance?.toFixed(4) ?? '—' }}</span>
+          </div>
+          <p class="pg-doc">{{ r.document.slice(0, 200) }}{{ r.document.length > 200 ? '...' : '' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Normal mode -->
+    <div v-if="!comparing && results.length" class="pg-results">
       <div v-for="(r, i) in results" :key="r.id" class="pg-card">
         <div class="pg-card-head">
           <span class="pg-rank">#{{ i + 1 }}</span>
@@ -121,7 +179,7 @@ async function runQuery(): Promise<void> {
       </div>
     </div>
 
-    <div v-else class="pg-empty">
+    <div v-if="!results.length && !running" class="pg-empty">
       <NText depth="3" v-if="colStore.selected">Enter a query to search "{{ colStore.selected.name }}"</NText>
       <NText depth="3" v-else>Select a collection to start querying</NText>
     </div>
@@ -175,4 +233,16 @@ async function runQuery(): Promise<void> {
 .pg-meta-k { color: var(--accent-dim); }
 
 .pg-empty { display: flex; align-items: center; justify-content: center; height: 100%; }
+
+/* Compare mode */
+.cmp-results { flex: 1; overflow: auto; display: flex; gap: 0; }
+.cmp-col { flex: 1; overflow-y: auto; padding: 8px 10px; }
+.cmp-col:first-child { border-right: 1px solid var(--border-default); }
+.cmp-col-hd { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; padding: 0 4px; }
+.cmp-card {
+  background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: 4px; padding: 10px; margin-bottom: 6px;
+}
+.cmp-card:hover { border-color: var(--border-default); }
+.pg-time { font-weight: 400; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
 </style>

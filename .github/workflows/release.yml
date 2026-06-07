@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+          - os: ubuntu-latest
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+      - name: Smoke test (startup)
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run --auto-servernum npx electron out/main/index.js &
+            PID=$!
+            sleep 8
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            npx electron out/main/index.js &
+            PID=$!
+            sleep 8
+          else
+            npx electron out/main/index.js &
+            PID=$!
+            sleep 8
+          fi
+
+          if kill -0 $PID 2>/dev/null; then
+            echo "PASS: app still running after 8s startup"
+            kill $PID 2>/dev/null
+            exit 0
+          else
+            echo "FAIL: app exited during startup"
+            exit 1
+          fi
+
+      - name: Package installer
+        run: npx electron-builder --${{ matrix.platform }} --publish never
+
+      - name: Upload to Release (draft)
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: dist/*

@@ -60,7 +60,9 @@ jobs:
           fi
 
       - name: Package installer
-        run: npx electron-builder --${{ matrix.platform }} --publish never
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          npx electron-builder --${{ matrix.platform }} --publish never -c.extraMetadata.version=$VERSION
 
       - name: Upload to Release (draft)
         uses: softprops/action-gh-release@v2

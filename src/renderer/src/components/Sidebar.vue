@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { NText, NSpin } from 'naive-ui'
-import { DatabaseIcon, Trash2Icon } from 'lucide-vue-next'
+import { DatabaseIcon, Trash2Icon, GitCompareIcon, LayoutGridIcon, SearchIcon } from 'lucide-vue-next'
 import { useConnectionStore } from '../stores/connection'
 import { useCollectionsStore } from '../stores/collections'
 
 const connStore = useConnectionStore()
 const colStore = useCollectionsStore()
+
+const emit = defineEmits<{ nav: [mode: 'browse' | 'compare' | 'playground'] }>()
 
 async function handleDelete(colName: string): Promise<void> {
   if (confirm(`Delete collection "${colName}"? This cannot be undone.`)) {
@@ -28,48 +30,44 @@ watch(() => connStore.connected, (val) => {
     <div class="sidebar-section">
       <div class="section-header">Collections</div>
       <div class="section-body">
-        <NText v-if="!connStore.connected" depth="3" class="hint">
-          Connect to browse collections
-        </NText>
+        <NText v-if="!connStore.connected" depth="3" class="hint">Connect to browse</NText>
         <NSpin v-else-if="colStore.loading" :size="16" class="spinner" />
         <div v-else-if="colStore.collections.length === 0" class="hint-row">
-          <NText depth="3" class="hint">No collections found</NText>
+          <NText depth="3" class="hint">No collections</NText>
         </div>
         <div
-          v-for="col in colStore.collections"
-          :key="col.id"
+          v-for="col in colStore.collections" :key="col.id"
           class="collection-item"
           :class="{ selected: colStore.selectedId === col.id }"
-          @click="colStore.selectCollection(connStore.currentUrl, col.id)"
+          @click="colStore.selectCollection(connStore.currentUrl, col.id); emit('nav', 'browse')"
         >
-          <div class="col-left">
-            <DatabaseIcon :size="13" class="col-icon" />
-            <span class="col-name">{{ col.name }}</span>
-          </div>
+          <div class="col-left"><DatabaseIcon :size="13" class="col-icon" /><span class="col-name">{{ col.name }}</span></div>
           <span class="col-count">{{ colStore.counts[col.id] ?? '-' }}</span>
-          <button class="col-delete" title="Delete collection" @click.stop="handleDelete(col.name)">
-            <Trash2Icon :size="12" />
-          </button>
+          <button class="col-delete" title="Delete" @click.stop="handleDelete(col.name)"><Trash2Icon :size="12" /></button>
         </div>
       </div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="section-header">Test Sets</div>
-      <div class="section-body">
-        <NText depth="3" class="hint">No test sets yet</NText>
-      </div>
+    <div class="sidebar-nav" v-if="connStore.connected">
+      <button class="nav-item" @click="emit('nav', 'browse')">
+        <LayoutGridIcon :size="13" /><span>Browse</span>
+      </button>
+      <button class="nav-item" @click="emit('nav', 'playground')">
+        <SearchIcon :size="13" /><span>Playground</span>
+      </button>
+      <button class="nav-item" :disabled="colStore.collections.length < 2" @click="emit('nav', 'compare')">
+        <GitCompareIcon :size="13" /><span>Compare</span>
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.sidebar { padding: 8px; }
-.sidebar-section { margin-bottom: 4px; }
+.sidebar { padding: 8px; display: flex; flex-direction: column; height: 100%; }
+.sidebar-section { flex: 1; overflow-y: auto; margin-bottom: 4px; }
 .section-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 8px;
-  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  padding: 6px 8px; font-size: 12px; font-weight: 600; text-transform: uppercase;
   letter-spacing: .6px; color: var(--text-muted); user-select: none;
 }
 .section-body { padding: 2px 4px; }
@@ -86,22 +84,21 @@ watch(() => connStore.connected, (val) => {
 .collection-item.selected { background: var(--bg-raised); border-left: 2px solid var(--accent); padding-left: 6px; }
 .col-left { display: flex; align-items: center; gap: 6px; }
 .col-icon { color: var(--text-muted); flex-shrink: 0; }
-.col-name {
-  font-family: var(--font-mono); font-size: 12px;
-  color: var(--text-primary); overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.col-delete {
-  display: none; align-items: center; justify-content: center;
-  width: 22px; height: 22px; border: none; background: transparent;
-  cursor: pointer; color: var(--text-muted); border-radius: 3px;
-  flex-shrink: 0;
-}
+.col-name { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-delete { display: none; align-items: center; justify-content: center; width: 22px; height: 22px; border: none; background: transparent; cursor: pointer; color: var(--text-muted); border-radius: 3px; flex-shrink: 0; }
 .collection-item:hover .col-delete { display: flex; }
 .col-delete:hover { background: var(--bg-hover); color: var(--danger); }
+.col-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 
-.col-count {
-  font-family: var(--font-mono); font-size: 11px;
-  color: var(--text-muted); flex-shrink: 0;
+.sidebar-nav {
+  border-top: 1px solid var(--border-subtle); padding-top: 4px;
+  display: flex; flex-direction: column; gap: 2px;
 }
+.nav-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+  border: none; background: none; cursor: pointer; color: var(--text-muted);
+  font-size: 12px; font-family: var(--font-ui); border-radius: 4px;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.nav-item:disabled { opacity: .3; cursor: not-allowed; }
 </style>

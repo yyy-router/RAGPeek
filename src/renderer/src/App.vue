@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar.vue'
 import StatusBar from './components/StatusBar.vue'
 import CollectionPreview from './components/CollectionPreview.vue'
 import QueryPlayground from './components/QueryPlayground.vue'
+import CompareView from './components/CompareView.vue'
 import { useConnectionStore } from './stores/connection'
 import { useZoom } from './composables/useZoom'
 import { useSidebar } from './composables/useSidebar'
@@ -14,7 +15,11 @@ import { ref } from 'vue'
 const conn = useConnectionStore()
 useZoom()
 const { collapsed, toggle } = useSidebar()
-const mode = ref<'browse' | 'playground'>('browse')
+const mode = ref<'browse' | 'playground' | 'compare'>('browse')
+
+function handleNav(m: 'browse' | 'compare' | 'playground'): void {
+  mode.value = m
+}
 </script>
 
 <template>
@@ -26,7 +31,7 @@ const mode = ref<'browse' | 'playground'>('browse')
     <div class="app-body">
       <aside class="app-sidebar" :class="{ collapsed }">
         <div v-show="!collapsed" class="sidebar-inner">
-          <Sidebar />
+          <Sidebar @nav="handleNav" />
         </div>
         <button class="sidebar-toggle" @click="toggle" :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
           <PanelLeftIcon v-if="collapsed" :size="16" />
@@ -35,11 +40,8 @@ const mode = ref<'browse' | 'playground'>('browse')
       </aside>
       <main class="app-main">
         <template v-if="conn.connected">
-          <div class="mode-bar">
-            <button class="mode-btn" :class="{ active: mode === 'browse' }" @click="mode = 'browse'">Browse</button>
-            <button class="mode-btn" :class="{ active: mode === 'playground' }" @click="mode = 'playground'">Playground</button>
-          </div>
           <CollectionPreview v-if="mode === 'browse'" />
+          <CompareView v-else-if="mode === 'compare'" />
           <QueryPlayground v-else />
         </template>
         <div v-else class="empty-state">
@@ -61,96 +63,37 @@ const mode = ref<'browse' | 'playground'>('browse')
 
 <style scoped>
 .app-shell {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: var(--bg-root);
+  display: flex; flex-direction: column; height: 100vh; background: var(--bg-root);
 }
 .app-header {
-  height: 40px;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
-  -webkit-app-region: drag;
+  height: 40px; min-height: 40px; display: flex; align-items: center;
+  padding: 0 12px; background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle); -webkit-app-region: drag;
 }
-.app-body {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
+.app-body { flex: 1; display: flex; overflow: hidden; }
 .app-sidebar {
-  width: 260px;
-  min-width: 260px;
-  background: var(--bg-surface);
-  border-right: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  transition: width .15s, min-width .15s;
-  position: relative;
+  width: 260px; min-width: 260px; background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle); display: flex;
+  flex-direction: column; transition: width .15s, min-width .15s; position: relative;
 }
-.app-sidebar.collapsed {
-  width: 36px;
-  min-width: 36px;
-}
-.sidebar-inner {
-  flex: 1;
-  overflow-y: auto;
-}
+.app-sidebar.collapsed { width: 36px; min-width: 36px; }
+.sidebar-inner { flex: 1; overflow-y: auto; }
 .sidebar-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 32px;
-  border: none;
-  border-top: 1px solid var(--border-subtle);
-  background: transparent;
-  cursor: pointer;
-  color: var(--text-secondary);
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 32px; border: none; border-top: 1px solid var(--border-subtle);
+  background: transparent; cursor: pointer; color: var(--text-secondary); flex-shrink: 0;
 }
 .sidebar-toggle:hover { background: var(--bg-hover); color: var(--text-primary); }
 .app-sidebar.collapsed .sidebar-toggle { border-top: none; }
 
-.app-main {
-  flex: 1;
-  overflow: hidden;
-  background: var(--bg-root);
-  display: flex; flex-direction: column;
-}
-.app-main > *:nth-child(n+3) { flex: 1; min-height: 0; }
+.app-main { flex: 1; overflow: hidden; background: var(--bg-root); display: flex; flex-direction: column; }
 
-.mode-bar { display: flex; border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface); padding: 0 12px; flex-shrink: 0; }
-.mode-btn {
-  padding: 7px 14px; border: none; background: none; cursor: pointer;
-  font-size: 12px; color: var(--text-muted); font-family: var(--font-ui);
-  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: .15s;
-}
-.mode-btn:hover { color: var(--text-primary); }
-.mode-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 .app-footer {
-  height: 26px;
-  min-height: 26px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  background: var(--bg-surface);
-  border-top: 1px solid var(--border-subtle);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-muted);
+  height: 26px; min-height: 26px; display: flex; align-items: center;
+  padding: 0 12px; background: var(--bg-surface); border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
 }
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 12px;
-}
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 12px; }
 .empty-icon { color: var(--text-muted); opacity: 0.4; }
 .empty-text { color: var(--text-muted); font-size: 14px; }
 </style>

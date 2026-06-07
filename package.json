@@ -1,6 +1,6 @@
 {
   "name": "ragpeek",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Desktop debugging tool for RAG retrieval quality",
   "main": "./out/main/index.js",
   "author": "yyy-router",

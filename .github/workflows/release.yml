@@ -60,6 +60,7 @@ jobs:
           fi
 
       - name: Package installer
+        shell: bash
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           npx electron-builder --${{ matrix.platform }} --publish never -c.extraMetadata.version=$VERSION
